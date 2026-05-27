@@ -13,6 +13,7 @@ $sourcePath = Join-Path $installerRoot "AgentInstaller.cs"
 $outputExe = Join-Path $distRoot "FlipPanelBridgeSetup.exe"
 $frameworkDir = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319"
 $csc = Join-Path $frameworkDir "csc.exe"
+$resourceArg = "/resource:$payloadZip,payload.zip"
 powershell -ExecutionPolicy Bypass -File $publishScript
 if (-not (Test-Path $distRoot)) {
     New-Item -ItemType Directory -Path $distRoot | Out-Null
@@ -20,7 +21,7 @@ if (-not (Test-Path $distRoot)) {
 if (-not (Test-Path $payloadZip)) {
     throw "Installer payload zip not found at $payloadZip"
 }
-& $csc /nologo /target:winexe /out:$outputExe /reference:"$frameworkDir\System.IO.Compression.dll" /reference:"$frameworkDir\System.IO.Compression.FileSystem.dll" /reference:"$frameworkDir\System.Windows.Forms.dll" /resource:"$payloadZip",payload.zip $sourcePath
+& $csc /nologo /target:winexe /out:$outputExe /reference:"$frameworkDir\System.IO.Compression.dll" /reference:"$frameworkDir\System.IO.Compression.FileSystem.dll" /reference:"$frameworkDir\System.Windows.Forms.dll" $resourceArg $sourcePath
 if ($LASTEXITCODE -ne 0) {
     throw "Installer compilation failed."
 }
