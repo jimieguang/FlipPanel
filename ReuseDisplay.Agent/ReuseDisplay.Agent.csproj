@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>tray.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="installer\**\*.cs" />
+    <Content Remove="installer\**\*" />
+    <None Remove="installer\**\*" />
+    <Content Remove="installer-staging\**\*" />
+    <None Remove="installer-staging\**\*" />
+    <Content Remove="bin\**\*" />
+    <None Remove="bin\**\*" />
+    <Content Remove="obj\**\*" />
+    <None Remove="obj\**\*" />
+    <Content Remove="*.ps1" />
+    <None Remove="*.ps1" />
+    <Content Remove="*.zip" />
+    <None Remove="*.zip" />
+    <Content Remove="*.exe" />
+    <None Remove="*.exe" />
+    <Content Remove="~*.DDF" />
+    <None Remove="~*.DDF" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="tray.ico" LogicalName="tray.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="agentsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="allow-agent-firewall.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

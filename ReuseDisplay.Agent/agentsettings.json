@@ -1,0 +1,8 @@
+{
+  "deviceAlias": null,
+  "broadcastPort": 50570,
+  "webSocketPort": 50571,
+  "sampleIntervalMs": 1000,
+  "enableBroadcastDiscovery": true,
+  "verboseLogging": true
+}
