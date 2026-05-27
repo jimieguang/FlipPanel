@@ -81,6 +81,25 @@ Android 构建脚本会将工程同步到 ASCII 临时目录，以规避 Windows
 .\FlipPanelFlutter\build-apk.ps1
 ```
 
+## GitHub Actions
+
+仓库内置了自动构建工作流：
+
+- push 到 `main`
+- 提交 Pull Request
+- 手动触发 `workflow_dispatch`
+
+工作流会分别构建：
+
+- `FlipPanel Bridge`
+- `FlipPanel Companion`
+
+并在 Actions 中上传三个 artifact：
+
+- `flip-panel-bridge`
+- `flip-panel-companion`
+- `flip-panel-distributables`
+
 ## 分发产物
 
 构建完成后，最终产物只会出现在 `可分发安装包` 目录：
@@ -129,4 +148,3 @@ Android 构建脚本会将工程同步到 ASCII 临时目录，以规避 Windows
 - 根目录文档只描述当前真实状态
 - 历史规划文档已移动到 `docs/archive/`
 - 如果文档与代码冲突，应以代码和当前构建链路为准
-

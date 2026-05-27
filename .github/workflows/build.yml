@@ -1,0 +1,126 @@
+name: Build Distributables
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: 8.0.x
+  JAVA_VERSION: "17"
+  FLUTTER_VERSION: 3.29.3
+
+jobs:
+  build-bridge:
+    name: Build FlipPanel Bridge
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build Windows distributables
+        shell: pwsh
+        run: |
+          ./ReuseDisplay.Agent/installer/build-installer.ps1
+
+      - name: Upload FlipPanel Bridge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flip-panel-bridge
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            可分发安装包/FlipPanel-Bridge.exe
+            可分发安装包/FlipPanel-Bridge-win-x64.zip
+            可分发安装包/FlipPanelBridgeSetup.exe
+
+  build-companion:
+    name: Build FlipPanel Companion
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Flutter SDK
+        shell: pwsh
+        run: |
+          $flutterRoot = Join-Path $env:RUNNER_TEMP 'flutter'
+          if (Test-Path $flutterRoot) {
+            Remove-Item $flutterRoot -Recurse -Force
+          }
+          git clone https://github.com/flutter/flutter.git --branch $env:FLUTTER_VERSION --depth 1 $flutterRoot
+          "FLUTTER_ROOT=$flutterRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "$flutterRoot\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Flutter doctor
+        shell: pwsh
+        run: |
+          flutter --version
+          flutter config --no-analytics
+          flutter doctor -v
+
+      - name: Build Android APK
+        shell: pwsh
+        run: |
+          ./FlipPanelFlutter/build-apk.ps1 -Clean
+
+      - name: Upload FlipPanel Companion artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flip-panel-companion
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            可分发安装包/FlipPanel-Companion.apk
+
+  bundle:
+    name: Bundle artifacts
+    runs-on: windows-2022
+    needs:
+      - build-bridge
+      - build-companion
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+
+      - name: Combine distributables
+        shell: pwsh
+        run: |
+          $bundleRoot = Join-Path $PWD 'bundle'
+          if (Test-Path $bundleRoot) {
+            Remove-Item $bundleRoot -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $bundleRoot | Out-Null
+          Copy-Item -Path artifacts\flip-panel-bridge\* -Destination $bundleRoot -Recurse -Force
+          Copy-Item -Path artifacts\flip-panel-companion\* -Destination $bundleRoot -Recurse -Force
+          Get-ChildItem -Path $bundleRoot | Select-Object Name, Length
+
+      - name: Upload bundled distributables
+        uses: actions/upload-artifact@v4
+        with:
+          name: flip-panel-distributables
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            bundle/*
