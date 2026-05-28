@@ -4,11 +4,13 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   DOTNET_VERSION: 8.0.x
@@ -125,3 +127,47 @@ jobs:
           retention-days: 14
           path: |
             bundle/*
+
+  release:
+    name: Publish GitHub Release
+    runs-on: windows-2022
+    needs:
+      - bundle
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download bundled distributables
+        uses: actions/download-artifact@v5
+        with:
+          name: flip-panel-distributables
+          path: release-assets
+
+      - name: Publish release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $assetDir = Join-Path $PWD 'release-assets'
+          $assetFiles = Get-ChildItem -LiteralPath $assetDir -File | ForEach-Object { $_.FullName }
+
+          if (-not $assetFiles -or $assetFiles.Count -eq 0) {
+            throw "No release assets found in $assetDir"
+          }
+
+          $notes = @"
+          Automated release for $tag
+
+          Included assets:
+          - FlipPanel Bridge portable exe
+          - FlipPanel Bridge portable zip
+          - FlipPanel Bridge installer
+          - FlipPanel Companion Android APK
+          "@
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $assetFiles --clobber
+          } else {
+            gh release create $tag $assetFiles --title $tag --notes $notes
+          }

@@ -100,6 +100,13 @@ Android 构建脚本会将工程同步到 ASCII 临时目录，以规避 Windows
 - `flip-panel-companion`
 - `flip-panel-distributables`
 
+当推送形如 `v*` 的标签时，工作流还会自动创建或更新对应的 GitHub Release，并上传：
+
+- `FlipPanel-Bridge.exe`
+- `FlipPanel-Bridge-win-x64.zip`
+- `FlipPanelBridgeSetup.exe`
+- `FlipPanel-Companion.apk`
+
 ## 分发产物
 
 构建完成后，最终产物只会出现在 `可分发安装包` 目录：
